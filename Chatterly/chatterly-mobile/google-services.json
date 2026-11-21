@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "899974576436",
+    "project_id": "stackly-chatterly",
+    "storage_bucket": "stackly-chatterly.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:899974576436:android:5278e7a7f0dee794184d61",
+        "android_client_info": {
+          "package_name": "com.chatterlymobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "899974576436-eeu1khegra03r1t9js0d5l4lunv9kfc7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.chatterlymobile",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "899974576436-s8rckvq9a8dcd2n30u2q7k3oo9cb253v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDi6CCquv2274C_Lva7uFUdpL1jmsobdiI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "899974576436-s8rckvq9a8dcd2n30u2q7k3oo9cb253v.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "899974576436-9d5cpg5v5ghfksulo8jlc8goknblhddn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.chatterlymobile"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

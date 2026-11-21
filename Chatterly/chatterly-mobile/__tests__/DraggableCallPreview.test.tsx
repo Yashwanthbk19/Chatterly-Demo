@@ -1,0 +1,24 @@
+import React from 'react';
+import TestRenderer, {act} from 'react-test-renderer';
+import {PanResponder} from 'react-native';
+import {DraggableCallPreview} from '../src/components/DraggableCallPreview';
+test('allows repeated drags and clamps the preview to the screen', () => {
+  let handlers: any;
+  const spy = jest.spyOn(PanResponder, 'create').mockImplementation(config => { handlers = config; return {panHandlers: {}}; });
+  let tree: TestRenderer.ReactTestRenderer;
+  act(() => { tree = TestRenderer.create(<DraggableCallPreview style={{position: 'absolute', right: 16, top: 76, width: 104, height: 148}}>camera</DraggableCallPreview>); });
+  const preview = () => tree.root.findAllByProps({accessibilityLabel: 'Floating self preview'}).find(node => node.props.onLayout)!;
+  act(() => { preview().props.onLayout({nativeEvent: {layout: {x: 200, y: 76, width: 104, height: 148}}}); });
+  handlers.onPanResponderGrant();
+  act(() => { handlers.onPanResponderMove({}, {dx: -50, dy: 80}); });
+  let transform = preview().props.style[1].transform;
+  expect(transform[0].translateX.__getValue()).toBe(-50);
+  expect(transform[1].translateY.__getValue()).toBe(80);
+  handlers.onPanResponderGrant();
+  act(() => { handlers.onPanResponderMove({}, {dx: -9999, dy: -9999}); });
+  transform = preview().props.style[1].transform;
+  expect(transform[0].translateX.__getValue()).toBe(-200);
+  expect(transform[1].translateY.__getValue()).toBe(-76);
+  act(() => { tree.unmount(); });
+  spy.mockRestore();
+});

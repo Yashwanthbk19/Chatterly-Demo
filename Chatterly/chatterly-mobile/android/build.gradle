@@ -1,0 +1,42 @@
+buildscript {
+    ext {
+        buildToolsVersion = "35.0.0"
+        minSdkVersion = 24
+        compileSdkVersion = 36
+        targetSdkVersion = 36
+        ndkVersion = "27.1.12297006"
+        kotlinVersion = "2.2.0"
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle")
+        classpath("com.facebook.react:react-native-gradle-plugin")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+        classpath("org.jetbrains.kotlin:compose-compiler-gradle-plugin:$kotlinVersion")
+        classpath("com.google.gms:google-services:4.4.2")
+    }
+}
+
+// Windows short paths can rename clang++ to CLANG_~1.EXE. Explicit C++
+// driver mode preserves runtime linking for the app and native dependencies.
+if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+    subprojects { subproject ->
+        subproject.afterEvaluate {
+            if (subproject.plugins.hasPlugin("com.android.application") ||
+                subproject.plugins.hasPlugin("com.android.library")) {
+                subproject.extensions.getByName("android").defaultConfig {
+                    externalNativeBuild {
+                        cmake {
+                            cppFlags "--driver-mode=g++"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+apply plugin: "com.facebook.react.rootproject"

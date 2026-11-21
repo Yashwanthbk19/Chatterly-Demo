@@ -1,0 +1,15 @@
+import express from "express";
+import authMiddleware from "../middleware/authMiddleware.js";
+import {
+    generateAnalytics,
+    getAnalyticsDashboard,
+    exportAnalyticsDashboard
+} from "../controllers/analyticsController.js";
+
+const router = express.Router();
+
+router.post("/analytics/generate", authMiddleware, generateAnalytics);
+router.get("/analytics/dashboard", authMiddleware, getAnalyticsDashboard);
+router.get("/analytics/export", authMiddleware, exportAnalyticsDashboard);
+
+export default router;

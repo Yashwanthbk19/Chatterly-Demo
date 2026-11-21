@@ -1,0 +1,5 @@
+<resources>
+  <string name="app_name">Chatterly</string>
+  <string name="stackly_brand">STACKLY</string>
+  <string name="share_into_scheme" translatable="false">chatterly</string>
+</resources>

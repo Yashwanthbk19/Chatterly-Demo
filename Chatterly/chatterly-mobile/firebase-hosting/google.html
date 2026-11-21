@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Chatterly Google Sign-In</title>
+    <style>
+      html, body { height: 100%; margin: 0; font-family: system-ui, sans-serif; background: #fff; color: #0b1220; }
+      main { min-height: 100%; display: grid; place-items: center; padding: 24px; box-sizing: border-box; text-align: center; }
+      button { height: 48px; min-width: 220px; padding: 0 22px; border: 0; border-radius: 6px; background: #8b4cf6; color: #fff; font: 600 14px system-ui, sans-serif; }
+      button:disabled { background: #dfe5ed; color: #667587; }
+      p { max-width: 320px; color: #596579; font-size: 14px; line-height: 1.5; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
+  </head>
+  <body>
+    <main>
+      <div>
+        <p id="status" role="status">Continue securely with your Google account.</p>
+        <button id="continue" type="button">Continue with Google</button>
+      </div>
+    </main>
+    <script src="/auth-common.js"></script>
+    <script>
+      async function continueGoogleSignIn() {
+        const auth = firebase.auth();
+        const button = document.getElementById('continue');
+        button.disabled = true;
+        showError('Opening Google Sign-In…');
+        try {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          provider.setCustomParameters({prompt: 'select_account'});
+          const result = await auth.signInWithPopup(provider);
+          const idToken = await result.user.getIdToken(true);
+          finish({id_token: idToken, email: result.user.email || ''});
+        } catch (error) {
+          if (error && error.code === 'auth/popup-closed-by-user') {
+            finish({cancelled: 'true'});
+            return;
+          }
+          finish(errorValues(error));
+        }
+      }
+
+      document.getElementById('continue').addEventListener('click', continueGoogleSignIn);
+    </script>
+  </body>
+</html>

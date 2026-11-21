@@ -1,0 +1,114 @@
+{
+  "expo": {
+    "name": "Chatterly",
+    "version": "1.0.0",
+    "slug": "chatterlymobile",
+    "scheme": "chatterly",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.chatterlymobile",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio",
+          "remote-notification"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.chatterlymobile",
+      "googleServicesFile": "./google-services.json"
+    },
+    "plugins": [
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow Chatterly to access your contacts so you can find friends already using Chatterly."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Chatterly to access your photos for profile pictures, messages, and chat wallpapers.",
+          "cameraPermission": "Allow Chatterly to use your camera for profile pictures, messages, and chat wallpapers."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Chatterly to use your camera to take photos and videos.",
+          "microphonePermission": "Allow Chatterly to use your microphone while recording videos.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Chatterly to show your recent photos and videos.",
+          "savePhotosPermission": "Allow Chatterly to save photos and videos.",
+          "granularPermissions": [
+            "photo",
+            "video"
+          ]
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Chatterly to make calls and record voice messages."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#6F28F5",
+          "defaultChannel": "messages",
+          "sounds": [
+            "./src/assets/sounds/incoming_call.wav",
+            "./src/assets/sounds/incoming_call_chime.wav",
+            "./src/assets/sounds/incoming_call_bell.wav",
+            "./src/assets/sounds/incoming_call_pop.wav"
+          ]
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": false
+        }
+      ],
+      [
+        "expo-sharing",
+        {
+          "android": {
+            "enabled": true,
+            "singleShareMimeTypes": ["image/*", "video/*"],
+            "multipleShareMimeTypes": ["image/*", "video/*"]
+          },
+          "ios": {
+            "enabled": true,
+            "extensionBundleIdentifier": "com.chatterlymobile.ShareMedia",
+            "appGroupId": "group.com.chatterlymobile.screensharing",
+            "activationRule": {
+              "supportsImageWithMaxCount": 10,
+              "supportsMovieWithMaxCount": 10,
+              "supportsAttachmentsWithMaxCount": 10
+            }
+          }
+        }
+      ],
+      "expo-video",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Chatterly to access your location when you choose to share it in a chat."
+        }
+      ],
+      "expo-web-browser",
+      "expo-asset",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "@react-native-firebase/messaging",
+      "@react-native-google-signin/google-signin"
+    ]
+  }
+}

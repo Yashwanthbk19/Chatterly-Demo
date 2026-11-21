@@ -1,0 +1,1721 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Global UI scale.
+ *
+ * The interface was rendering larger ("zoomed in") than the intended design at
+ * 100% browser zoom. Because the UI mixes fixed-pixel sizes (e.g. text-[14px],
+ * h-8) with rem units, the only way to scale ALL of it uniformly is `zoom` on the
+ * root element (font-size alone would only affect the rem-based pieces).
+ *
+ * Caveat: viewport units (vh/dvh) resolve against the real viewport and are then
+ * shrunk by the zoom, so a `100vh` element only fills `100vh * zoom` and leaves a
+ * gap at the bottom. To compensate, every full-height container divides its
+ * viewport height by the same factor (see the .min-h-screen / .h-screen overrides
+ * below, and ChatListPage's main shell). Tweak the single value to match the
+ * design: 1 = 100%, lower = more compact. font-size stays pinned to 16px so
+ * rem-based pieces are anchored before the zoom is applied.
+ */
+:root {
+  /* Single source of truth for the global UI scale. 1 = 100%, lower = more
+     compact. Full-height containers divide their viewport height by this value
+     so they still fill the screen with no gap. */
+  --app-zoom: 0.85;
+}
+
+/* Appearance settings: the compact two-column treatment from the approved design.
+   These classes are intentionally explicit so the broad app dark-mode utility
+   overrides cannot alter this screen's carefully matched surfaces. */
+.chatterly-appearance-panel {
+  background: #ffffff;
+}
+
+.chatterly-appearance-heading,
+.chatterly-appearance-title {
+  color: #111827;
+}
+
+.chatterly-appearance-intro,
+.chatterly-appearance-description {
+  color: #64748b;
+}
+
+.chatterly-appearance-list {
+  border-top: 1px solid #edf1f6;
+}
+
+.chatterly-appearance-row {
+  border-color: #edf1f6;
+}
+
+.chatterly-appearance-icon {
+  background: #f7f8fa;
+  color: #64748b;
+}
+
+.chatterly-appearance-select {
+  border: 1px solid #f4f5f7;
+  background: #f8f9fb;
+  color: #111827;
+}
+
+.chatterly-appearance-select:hover {
+  background: #f2f4f7;
+}
+
+.chatterly-appearance-menu {
+  border: 1px solid #edf0f4;
+  background: #ffffff;
+}
+
+.chatterly-appearance-option {
+  color: #111827;
+}
+
+.chatterly-appearance-option:hover,
+.chatterly-appearance-option.is-selected {
+  background: #f6f7f9;
+}
+
+.chatterly-appearance-option.is-selected {
+  color: #111827;
+}
+
+.chatterly-sidebar-status {
+  background: #eef2f7;
+  color: #334155;
+}
+
+.chatterly-sidebar-switch {
+  background: #dde5f0;
+}
+
+.chatterly-sidebar-switch.is-enabled {
+  background: #8b5cf6;
+}
+
+.chatterly-sidebar-switch-thumb {
+  background: #ffffff;
+}
+
+html[data-theme='dark'] .chatterly-appearance-panel {
+  background: #141C2C !important;
+}
+
+html[data-theme='dark'] .chatterly-appearance-heading,
+html[data-theme='dark'] .chatterly-appearance-title {
+  color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .chatterly-appearance-intro,
+html[data-theme='dark'] .chatterly-appearance-description {
+  color: #A6B6CE !important;
+}
+
+html[data-theme='dark'] .chatterly-appearance-list,
+html[data-theme='dark'] .chatterly-appearance-row {
+  border-color: #28344C !important;
+}
+
+html[data-theme='dark'] .chatterly-appearance-icon {
+  background: #0E1626 !important;
+  color: #A6B6CE !important;
+}
+
+html[data-theme='dark'] .chatterly-appearance-select {
+  border-color: #182236 !important;
+  background: #182236 !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .chatterly-appearance-select:hover {
+  background: #212C40 !important;
+}
+
+html[data-theme='dark'] .chatterly-appearance-menu {
+  border-color: #28344C !important;
+  background: #1A2333 !important;
+}
+
+html[data-theme='dark'] .chatterly-appearance-option,
+html[data-theme='dark'] .chatterly-appearance-option.is-selected {
+  color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .chatterly-appearance-option:hover,
+html[data-theme='dark'] .chatterly-appearance-option.is-selected {
+  background: #212C40 !important;
+}
+
+html[data-theme='dark'] .chatterly-wallpaper-action {
+  color: #aebbd0 !important;
+}
+
+html[data-theme='dark'] .chatterly-sidebar-status {
+  background: #182236 !important;
+  color: #e7edf6 !important;
+}
+
+html[data-theme='dark'] .chatterly-sidebar-switch {
+  background: #53647d;
+}
+
+html[data-theme='dark'] .chatterly-sidebar-switch.is-enabled {
+  background: #8b5cf6;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  zoom: var(--app-zoom);
+}
+
+/*
+ * Make the full-viewport-height utilities zoom-aware. These are unlayered rules,
+ * so they override Tailwind's layered .min-h-screen / .h-screen without needing
+ * !important. Dividing by --app-zoom cancels the shrink the html zoom applies, so
+ * these screens (login, OTP, home, profile, loaders) fill the viewport with no
+ * white gap at the bottom.
+ */
+.min-h-screen {
+  min-height: calc(100vh / var(--app-zoom, 1));
+}
+
+.h-screen {
+  height: calc(100vh / var(--app-zoom, 1));
+}
+
+.chatterly-profile-edit-backdrop {
+  width: calc(100vw / var(--app-zoom, 1));
+  min-height: calc(100vh / var(--app-zoom, 1));
+  max-height: calc(100vh / var(--app-zoom, 1));
+}
+
+.chatterly-profile-edit-dialog {
+  max-height: calc((100vh / var(--app-zoom, 1)) - 80px);
+}
+
+/*
+ * Readability pass: several screens use light gray utility classes for body
+ * copy, labels, placeholders, and secondary actions. Keep the existing class
+ * names in JSX, but raise their contrast globally so text remains legible on
+ * the app's white and off-white surfaces.
+ */
+.text-\[\#71767A\],
+.text-\[\#6B7280\],
+.text-\[\#64748B\],
+.text-\[\#7B8798\],
+.text-gray-500 {
+  color: #334155;
+}
+
+.text-\[\#8A94A6\],
+.text-\[\#94A3B8\],
+.text-\[\#9CA3AF\],
+.text-\[\#A3AFC4\],
+.text-gray-400 {
+  color: #475569;
+}
+
+.text-\[\#CBD5E1\],
+.text-gray-300 {
+  color: #64748b;
+}
+
+.hover\:text-\[\#64748B\]:hover,
+.hover\:text-gray-600:hover {
+  color: #1f2937;
+}
+
+.placeholder\:text-\[\#94A3B8\]::placeholder,
+.placeholder\:text-gray-400::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+/* Application theme. Most Chatterly screens are composed from Tailwind utility
+ * classes, so these scoped overrides let every existing panel, menu, card,
+ * field and sidebar share the same dark Material-style surface without changing
+ * the layout or duplicating thousands of utility classes. */
+html[data-theme='dark'] {
+  color-scheme: dark;
+  background: #0A0F1C;
+}
+
+html[data-theme='dark'] body,
+html[data-theme='dark'] #root {
+  background: #0A0F1C;
+}
+
+.chatterly-theme-dark [class*="bg-white"],
+.chatterly-theme-dark [class*="bg-[#F8"],
+.chatterly-theme-dark [class*="bg-[#F7"],
+.chatterly-theme-dark [class*="bg-[#FA"],
+.chatterly-theme-dark [class*="bg-[#F1"],
+.chatterly-theme-dark [class*="bg-[#EF"],
+.chatterly-theme-dark [class*="bg-[#EE"],
+.chatterly-theme-dark [class*="bg-[#E"],
+.chatterly-theme-dark [class*="bg-gray-50"] {
+  background-color: #141C2C !important;
+}
+
+.chatterly-theme-dark [class*="bg-[#F3E8FF]"],
+.chatterly-theme-dark [class*="bg-[#EFE9FF]"] {
+  background-color: #2A2350 !important;
+}
+
+.chatterly-theme-dark [class*="border-[#D"],
+.chatterly-theme-dark [class*="border-[#E"],
+.chatterly-theme-dark [class*="border-gray-"],
+.chatterly-theme-dark [class*="divide-[#D"],
+.chatterly-theme-dark [class*="divide-[#E"] {
+  border-color: #28344C !important;
+}
+
+.chatterly-theme-dark [class*="text-[#111"],
+.chatterly-theme-dark [class*="text-[#172"],
+.chatterly-theme-dark [class*="text-[#1A"],
+.chatterly-theme-dark [class*="text-[#1E"],
+.chatterly-theme-dark [class*="text-[#2"],
+.chatterly-theme-dark [class*="text-[#3"],
+.chatterly-theme-dark [class*="text-[#4"],
+.chatterly-theme-dark [class*="text-[#5"],
+.chatterly-theme-dark [class*="text-[#6"],
+.chatterly-theme-dark .text-gray-400,
+.chatterly-theme-dark .text-gray-500,
+.chatterly-theme-dark .text-gray-600,
+.chatterly-theme-dark .text-gray-700,
+.chatterly-theme-dark .text-gray-800,
+.chatterly-theme-dark .text-gray-900 {
+  color: #e8edf7 !important;
+}
+
+/* The substring ranges above start at #1, so every near-black slate that begins
+ * with a 0 (and #10xxxx, which no prefix covers) kept its light-mode colour and
+ * disappeared into the dark surface. Matched on the full hex so the #0-prefixed
+ * greens below are not swept up with them. */
+.chatterly-theme-dark [class*="text-[#0F172A]"],
+.chatterly-theme-dark [class*="text-[#0B1220]"],
+.chatterly-theme-dark [class*="text-[#0B1026]"],
+.chatterly-theme-dark [class*="text-[#020617]"],
+.chatterly-theme-dark [class*="text-[#101828]"] {
+  color: #e8edf7 !important;
+}
+
+/* ==========================================================================
+ * Dark-mode contrast pass.
+ * Generated from every bg-[#hex] / text-[#hex] / stroke / fill value that
+ * actually appears in src, then verified by rendering one probe node per
+ * className in both themes and measuring the computed WCAG contrast, so the
+ * lists below are the colours that genuinely regress in dark mode rather than
+ * a guess at them. Keep it last among the unscoped .chatterly-theme-dark rules:
+ * it is deliberately allowed to win ties against the prefix ranges above.
+ * ========================================================================== */
+/* Light surfaces. The prefix list above only reaches bg-white and the
+ * #E / #EE / #EF / #F1 / #F7 / #F8 / #FA ranges, so every other near-white panel,
+ * chip and badge stayed light while the text on it was lifted to near-white -
+ * the "text is hard to read in Dark Mode" report. Each tint drops to a surface
+ * of its own hue so a status chip still reads as a status chip. */
+.chatterly-theme-dark [class*="bg-[#CFF9FF]"],
+.chatterly-theme-dark [class*="bg-[#E7F8F4]"] {
+  background-color: #0F3038 !important;
+}
+.chatterly-theme-dark [class*="bg-[#CFEEDF]"],
+.chatterly-theme-dark [class*="bg-[#D1FAE5]"],
+.chatterly-theme-dark [class*="bg-[#D8F1EA]"],
+.chatterly-theme-dark [class*="bg-[#D9FFE9]"],
+.chatterly-theme-dark [class*="bg-[#DCFCE7]"],
+.chatterly-theme-dark [class*="bg-[#DCFCEB]"],
+.chatterly-theme-dark [class*="bg-[#DDF4EC]"],
+.chatterly-theme-dark [class*="bg-[#DDF7EF]"],
+.chatterly-theme-dark [class*="bg-[#DFF8ED]"],
+.chatterly-theme-dark [class*="bg-[#E7FAF0]"],
+.chatterly-theme-dark [class*="bg-[#E7FCEB]"],
+.chatterly-theme-dark [class*="bg-[#E9F9F0]"],
+.chatterly-theme-dark [class*="bg-[#EAF8F4]"],
+.chatterly-theme-dark [class*="bg-[#EAF9F2]"],
+.chatterly-theme-dark [class*="bg-[#EAFBF1]"],
+.chatterly-theme-dark [class*="bg-[#ECFAF4]"],
+.chatterly-theme-dark [class*="bg-[#ECFDF3]"],
+.chatterly-theme-dark [class*="bg-[#ECFDF5]"],
+.chatterly-theme-dark [class*="bg-[#EEF7F4]"],
+.chatterly-theme-dark [class*="bg-[#F0FBF6]"],
+.chatterly-theme-dark [class*="bg-[#F0FDF4]"],
+.chatterly-theme-dark [class*="bg-[#F0FDF9]"],
+.chatterly-theme-dark [class*="bg-[#F0FFF9]"],
+.chatterly-theme-dark [class*="bg-[#F1FBF8]"],
+.chatterly-theme-dark [class*="bg-[#F6FBF8]"] {
+  background-color: #123329 !important;
+}
+.chatterly-theme-dark [class*="bg-[#CBD5E1]"],
+.chatterly-theme-dark [class*="bg-[#D7DEE8]"],
+.chatterly-theme-dark [class*="bg-[#D7E0E8]"],
+.chatterly-theme-dark [class*="bg-[#D8E0EB]"],
+.chatterly-theme-dark [class*="bg-[#DCE5EC]"],
+.chatterly-theme-dark [class*="bg-[#DDE2E8]"],
+.chatterly-theme-dark [class*="bg-[#DDE5EF]"],
+.chatterly-theme-dark [class*="bg-[#DFE5E7]"],
+.chatterly-theme-dark [class*="bg-[#F0F1F5]"],
+.chatterly-theme-dark [class*="bg-[#F0F2F5]"],
+.chatterly-theme-dark [class*="bg-[#F2F4F7]"],
+.chatterly-theme-dark [class*="bg-[#F3F4F6]"],
+.chatterly-theme-dark [class*="bg-[#F3F5F8]"],
+.chatterly-theme-dark [class*="bg-[#F5F6F6]"],
+.chatterly-theme-dark [class*="bg-[#F5F6F8]"],
+.chatterly-theme-dark [class*="bg-[#F5F7FA]"],
+.chatterly-theme-dark [class*="bg-[#F6F7FA]"],
+.chatterly-theme-dark [class*="bg-[#F9FAFB]"],
+.chatterly-theme-dark [class*="bg-[#FCFCFD]"] {
+  background-color: #141C2C !important;
+}
+.chatterly-theme-dark [class*="bg-[#AFC2FF]"],
+.chatterly-theme-dark [class*="bg-[#C4B5FD]"],
+.chatterly-theme-dark [class*="bg-[#C4D8FF]"],
+.chatterly-theme-dark [class*="bg-[#D6E0EC]"],
+.chatterly-theme-dark [class*="bg-[#D8CCFF]"],
+.chatterly-theme-dark [class*="bg-[#DBE7FF]"],
+.chatterly-theme-dark [class*="bg-[#DBEAFE]"],
+.chatterly-theme-dark [class*="bg-[#DCE4EF]"],
+.chatterly-theme-dark [class*="bg-[#DCE4FF]"],
+.chatterly-theme-dark [class*="bg-[#DCEBFF]"],
+.chatterly-theme-dark [class*="bg-[#DDD6FE]"],
+.chatterly-theme-dark [class*="bg-[#DDE6F2]"],
+.chatterly-theme-dark [class*="bg-[#DFE7F2]"],
+.chatterly-theme-dark [class*="bg-[#E0E7FF]"],
+.chatterly-theme-dark [class*="bg-[#E0EAFF]"],
+.chatterly-theme-dark [class*="bg-[#E2E8FF]"],
+.chatterly-theme-dark [class*="bg-[#E3EAF2]"],
+.chatterly-theme-dark [class*="bg-[#E5F0FF]"],
+.chatterly-theme-dark [class*="bg-[#E8E3FF]"],
+.chatterly-theme-dark [class*="bg-[#E8EEF7]"],
+.chatterly-theme-dark [class*="bg-[#E8EEF9]"],
+.chatterly-theme-dark [class*="bg-[#E9E7F5]"],
+.chatterly-theme-dark [class*="bg-[#EDE9FE]"],
+.chatterly-theme-dark [class*="bg-[#EDF2F7]"],
+.chatterly-theme-dark [class*="bg-[#EDF4FF]"],
+.chatterly-theme-dark [class*="bg-[#EEE9FF]"],
+.chatterly-theme-dark [class*="bg-[#EEF2F7]"],
+.chatterly-theme-dark [class*="bg-[#EEF2F8]"],
+.chatterly-theme-dark [class*="bg-[#EEF2FF]"],
+.chatterly-theme-dark [class*="bg-[#EEF4FF]"],
+.chatterly-theme-dark [class*="bg-[#EEF5FF]"],
+.chatterly-theme-dark [class*="bg-[#EEF6FF]"],
+.chatterly-theme-dark [class*="bg-[#EFF4FA]"],
+.chatterly-theme-dark [class*="bg-[#EFF6FF]"],
+.chatterly-theme-dark [class*="bg-[#F0F4FA]"],
+.chatterly-theme-dark [class*="bg-[#F1EFFE]"],
+.chatterly-theme-dark [class*="bg-[#F1F4F9]"],
+.chatterly-theme-dark [class*="bg-[#F1F5F9]"],
+.chatterly-theme-dark [class*="bg-[#F3EFFF]"],
+.chatterly-theme-dark [class*="bg-[#F3F0FF]"],
+.chatterly-theme-dark [class*="bg-[#F3F6FB]"],
+.chatterly-theme-dark [class*="bg-[#F4F1FF]"],
+.chatterly-theme-dark [class*="bg-[#F4F6FA]"],
+.chatterly-theme-dark [class*="bg-[#F4F6FB]"],
+.chatterly-theme-dark [class*="bg-[#F5F3FF]"],
+.chatterly-theme-dark [class*="bg-[#F5F7FB]"],
+.chatterly-theme-dark [class*="bg-[#F5F8FC]"],
+.chatterly-theme-dark [class*="bg-[#F6F8FC]"],
+.chatterly-theme-dark [class*="bg-[#F7F8FC]"],
+.chatterly-theme-dark [class*="bg-[#F8F7FF]"],
+.chatterly-theme-dark [class*="bg-[#F8FAFC]"],
+.chatterly-theme-dark [class*="bg-[#F8FAFF]"],
+.chatterly-theme-dark [class*="bg-[#F8FBFF]"],
+.chatterly-theme-dark [class*="bg-[#FAFAFF]"],
+.chatterly-theme-dark [class*="bg-[#FAFBFD]"],
+.chatterly-theme-dark [class*="bg-[#FAFBFF]"],
+.chatterly-theme-dark [class*="bg-[#FBFCFE]"],
+.chatterly-theme-dark [class*="bg-[#FBFCFF]"],
+.chatterly-theme-dark [class*="bg-[#FBFDFF]"],
+.chatterly-theme-dark [class*="bg-[#FCFDFF]"] {
+  background-color: #16243C !important;
+}
+.chatterly-theme-dark [class*="bg-[#D8C5FF]"],
+.chatterly-theme-dark [class*="bg-[#E7D8FF]"],
+.chatterly-theme-dark [class*="bg-[#E7DBFF]"],
+.chatterly-theme-dark [class*="bg-[#E9D5FF]"],
+.chatterly-theme-dark [class*="bg-[#E9DDFF]"],
+.chatterly-theme-dark [class*="bg-[#E9DFFF]"],
+.chatterly-theme-dark [class*="bg-[#EAE3FF]"],
+.chatterly-theme-dark [class*="bg-[#EBDDFF]"],
+.chatterly-theme-dark [class*="bg-[#EDE6FF]"],
+.chatterly-theme-dark [class*="bg-[#EDE7FF]"],
+.chatterly-theme-dark [class*="bg-[#EEE6FF]"],
+.chatterly-theme-dark [class*="bg-[#EEE7FF]"],
+.chatterly-theme-dark [class*="bg-[#EEE8FF]"],
+.chatterly-theme-dark [class*="bg-[#F0E6FF]"],
+.chatterly-theme-dark [class*="bg-[#F0E7FF]"],
+.chatterly-theme-dark [class*="bg-[#F0E8FF]"],
+.chatterly-theme-dark [class*="bg-[#F0EAFE]"],
+.chatterly-theme-dark [class*="bg-[#F0EDF8]"],
+.chatterly-theme-dark [class*="bg-[#F1E8FF]"],
+.chatterly-theme-dark [class*="bg-[#F1E9FF]"],
+.chatterly-theme-dark [class*="bg-[#F1EAFE]"],
+.chatterly-theme-dark [class*="bg-[#F1EBFE]"],
+.chatterly-theme-dark [class*="bg-[#F2E9FF]"],
+.chatterly-theme-dark [class*="bg-[#F3E8FF]"],
+.chatterly-theme-dark [class*="bg-[#F3EAFF]"],
+.chatterly-theme-dark [class*="bg-[#F3EEFF]"],
+.chatterly-theme-dark [class*="bg-[#F3EFFE]"],
+.chatterly-theme-dark [class*="bg-[#F4EEFF]"],
+.chatterly-theme-dark [class*="bg-[#F4EFFF]"],
+.chatterly-theme-dark [class*="bg-[#F4F0FF]"],
+.chatterly-theme-dark [class*="bg-[#F5EEFF]"],
+.chatterly-theme-dark [class*="bg-[#F5F0FF]"],
+.chatterly-theme-dark [class*="bg-[#F5F1FF]"],
+.chatterly-theme-dark [class*="bg-[#F7F2FF]"],
+.chatterly-theme-dark [class*="bg-[#F7F3FF]"],
+.chatterly-theme-dark [class*="bg-[#F7F4FF]"],
+.chatterly-theme-dark [class*="bg-[#F8D1FF]"],
+.chatterly-theme-dark [class*="bg-[#F8F5FF]"],
+.chatterly-theme-dark [class*="bg-[#FAF7FF]"],
+.chatterly-theme-dark [class*="bg-[#FCFAFF]"] {
+  background-color: #2A2350 !important;
+}
+.chatterly-theme-dark [class*="bg-[#FEFBEC]"],
+.chatterly-theme-dark [class*="bg-[#FFF0A8]"],
+.chatterly-theme-dark [class*="bg-[#FFFBEB]"] {
+  background-color: #38310F !important;
+}
+.chatterly-theme-dark [class*="bg-[#FDF2F8]"] {
+  background-color: #3A1B33 !important;
+}
+.chatterly-theme-dark [class*="bg-[#FDE8E8]"],
+.chatterly-theme-dark [class*="bg-[#FDF0F0]"],
+.chatterly-theme-dark [class*="bg-[#FEE2E2]"],
+.chatterly-theme-dark [class*="bg-[#FEECEC]"],
+.chatterly-theme-dark [class*="bg-[#FEF0F0]"],
+.chatterly-theme-dark [class*="bg-[#FEF2F2]"],
+.chatterly-theme-dark [class*="bg-[#FEF3F2]"],
+.chatterly-theme-dark [class*="bg-[#FFE4E6]"],
+.chatterly-theme-dark [class*="bg-[#FFF0F0]"],
+.chatterly-theme-dark [class*="bg-[#FFF0F2]"],
+.chatterly-theme-dark [class*="bg-[#FFF1F1]"],
+.chatterly-theme-dark [class*="bg-[#FFF1F2]"],
+.chatterly-theme-dark [class*="bg-[#FFF4F4]"],
+.chatterly-theme-dark [class*="bg-[#FFF5F5]"],
+.chatterly-theme-dark [class*="bg-[#FFF7F7]"] {
+  background-color: #3A1F27 !important;
+}
+.chatterly-theme-dark [class*="bg-[#FFEDD5]"],
+.chatterly-theme-dark [class*="bg-[#FFF7E7]"],
+.chatterly-theme-dark [class*="bg-[#FFF7ED]"],
+.chatterly-theme-dark [class*="bg-[#FFF8E6]"],
+.chatterly-theme-dark [class*="bg-[#FFF9E9]"],
+.chatterly-theme-dark [class*="bg-[#FFF9F1]"] {
+  background-color: #3A2B15 !important;
+}
+
+/* Ink. Two separate blind spots: dark hues no prefix covers (#18xxxx, #1Dxxxx,
+ * #1Fxxxx and every semantic red / amber / green / blue / purple), and the light
+ * greys that the light-mode readability pass near the top of this file pushes
+ * DARKER - which on a dark surface is exactly backwards. */
+.chatterly-theme-dark [class*="text-[#008B52]"],
+.chatterly-theme-dark [class*="text-[#00A979]"],
+.chatterly-theme-dark [class*="text-[#027A48]"],
+.chatterly-theme-dark [class*="text-[#047857]"],
+.chatterly-theme-dark [class*="text-[#057A55]"],
+.chatterly-theme-dark [class*="text-[#059669]"],
+.chatterly-theme-dark [class*="text-[#064E3B]"],
+.chatterly-theme-dark [class*="text-[#065F46]"],
+.chatterly-theme-dark [class*="text-[#10B981]"],
+.chatterly-theme-dark [class*="text-[#147B5F]"],
+.chatterly-theme-dark [class*="text-[#15803D]"],
+.chatterly-theme-dark [class*="text-[#158A5B]"],
+.chatterly-theme-dark [class*="text-[#166534]"],
+.chatterly-theme-dark [class*="text-[#16865E]"],
+.chatterly-theme-dark [class*="text-[#168A68]"],
+.chatterly-theme-dark [class*="text-[#16A34A]"],
+.chatterly-theme-dark [class*="text-[#17A34A]"],
+.chatterly-theme-dark [class*="text-[#22C55E]"] {
+  color: #6EE7B7 !important;
+}
+.chatterly-theme-dark [class*="text-[#008069]"],
+.chatterly-theme-dark [class*="text-[#00A7C4]"],
+.chatterly-theme-dark [class*="text-[#00A884]"],
+.chatterly-theme-dark [class*="text-[#0F6B56]"],
+.chatterly-theme-dark [class*="text-[#12876F]"],
+.chatterly-theme-dark [class*="text-[#16A085]"] {
+  color: #7DD3E8 !important;
+}
+.chatterly-theme-dark [class*="text-[#020617]"],
+.chatterly-theme-dark [class*="text-[#0A66C2]"],
+.chatterly-theme-dark [class*="text-[#0B1220]"],
+.chatterly-theme-dark [class*="text-[#0F172A]"],
+.chatterly-theme-dark [class*="text-[#101828]"],
+.chatterly-theme-dark [class*="text-[#111827]"],
+.chatterly-theme-dark [class*="text-[#172033]"],
+.chatterly-theme-dark [class*="text-[#182236]"],
+.chatterly-theme-dark [class*="text-[#1D4ED8]"],
+.chatterly-theme-dark [class*="text-[#1D9BF0]"],
+.chatterly-theme-dark [class*="text-[#1E40AF]"],
+.chatterly-theme-dark [class*="text-[#2142A6]"],
+.chatterly-theme-dark [class*="text-[#2557FF]"],
+.chatterly-theme-dark [class*="text-[#2563EB]"],
+.chatterly-theme-dark [class*="text-[#2E5FEA]"],
+.chatterly-theme-dark [class*="text-[#3158B7]"],
+.chatterly-theme-dark [class*="text-[#3730A3]"],
+.chatterly-theme-dark [class*="text-[#3769B0]"],
+.chatterly-theme-dark [class*="text-[#3B5BDB]"],
+.chatterly-theme-dark [class*="text-[#3B82F6]"],
+.chatterly-theme-dark [class*="text-[#3C57FF]"],
+.chatterly-theme-dark [class*="text-[#4786FF]"],
+.chatterly-theme-dark [class*="text-[#4C6CB8]"],
+.chatterly-theme-dark [class*="text-[#4C6EF5]"],
+.chatterly-theme-dark [class*="text-[#4E67FF]"],
+.chatterly-theme-dark [class*="text-[#4F46E5]"],
+.chatterly-theme-dark [class*="text-[#5B2BEF]"],
+.chatterly-theme-dark [class*="text-[#5B5FF6]"],
+.chatterly-theme-dark [class*="text-[#6366F1]"],
+.chatterly-theme-dark [class*="text-[#6D5BB5]"],
+.chatterly-theme-dark [class*="text-[#6D5EF6]"],
+.chatterly-theme-dark [class*="text-[#7653E8]"] {
+  color: #93C5FD !important;
+}
+.chatterly-theme-dark [class*="text-[#71767A]"],
+.chatterly-theme-dark [class*="text-[#718096]"],
+.chatterly-theme-dark [class*="text-[#718099]"],
+.chatterly-theme-dark [class*="text-[#71809A]"],
+.chatterly-theme-dark [class*="text-[#71829B]"],
+.chatterly-theme-dark [class*="text-[#728197]"],
+.chatterly-theme-dark [class*="text-[#7A8699]"],
+.chatterly-theme-dark [class*="text-[#7B8496]"],
+.chatterly-theme-dark [class*="text-[#7B8798]"],
+.chatterly-theme-dark [class*="text-[#7B8AA3]"],
+.chatterly-theme-dark [class*="text-[#7C8798]"],
+.chatterly-theme-dark [class*="text-[#7C8DA5]"],
+.chatterly-theme-dark [class*="text-[#7F8EA8]"],
+.chatterly-theme-dark [class*="text-[#8492A6]"],
+.chatterly-theme-dark [class*="text-[#8A94A6]"],
+.chatterly-theme-dark [class*="text-[#8A98AD]"],
+.chatterly-theme-dark [class*="text-[#8A9AB2]"],
+.chatterly-theme-dark [class*="text-[#91A5BC]"],
+.chatterly-theme-dark [class*="text-[#93A4C0]"],
+.chatterly-theme-dark [class*="text-[#94A3B8]"],
+.chatterly-theme-dark [class*="text-[#98A2B3]"],
+.chatterly-theme-dark [class*="text-[#98A8C1]"],
+.chatterly-theme-dark [class*="text-[#9AABC8]"],
+.chatterly-theme-dark [class*="text-[#9BA9C1]"],
+.chatterly-theme-dark [class*="text-[#9CA3AF]"],
+.chatterly-theme-dark [class*="text-[#A3AFC4]"],
+.chatterly-theme-dark [class*="text-[#A5B0C2]"],
+.chatterly-theme-dark [class*="text-[#A6B1C2]"],
+.chatterly-theme-dark [class*="text-[#A8B4C2]"] {
+  color: #A6B6CE !important;
+}
+.chatterly-theme-dark [class*="text-[#4C1D95]"],
+.chatterly-theme-dark [class*="text-[#5121BF]"],
+.chatterly-theme-dark [class*="text-[#5B21B6]"],
+.chatterly-theme-dark [class*="text-[#6938EF]"],
+.chatterly-theme-dark [class*="text-[#6C3BFF]"],
+.chatterly-theme-dark [class*="text-[#6D28D9]"],
+.chatterly-theme-dark [class*="text-[#6D3DF5]"],
+.chatterly-theme-dark [class*="text-[#7047E8]"],
+.chatterly-theme-dark [class*="text-[#7C3AED]"],
+.chatterly-theme-dark [class*="text-[#8B5CF6]"],
+.chatterly-theme-dark [class*="text-[#8D44F7]"],
+.chatterly-theme-dark [class*="text-[#9B66FF]"],
+.chatterly-theme-dark [class*="text-[#A855F7]"],
+.chatterly-theme-dark [class*="text-[#C026D3]"],
+.chatterly-theme-dark [class*="text-[#DB49F3]"] {
+  color: #C4B5FD !important;
+}
+.chatterly-theme-dark [class*="text-[#181818]"],
+.chatterly-theme-dark [class*="text-[#1D2939]"],
+.chatterly-theme-dark [class*="text-[#1F2937]"] {
+  color: #E8EDF7 !important;
+}
+.chatterly-theme-dark [class*="text-[#7F1D1D]"],
+.chatterly-theme-dark [class*="text-[#991B1B]"],
+.chatterly-theme-dark [class*="text-[#9F1D1D]"],
+.chatterly-theme-dark [class*="text-[#B42318]"],
+.chatterly-theme-dark [class*="text-[#B91C1C]"],
+.chatterly-theme-dark [class*="text-[#C5161D]"],
+.chatterly-theme-dark [class*="text-[#C53A3A]"],
+.chatterly-theme-dark [class*="text-[#D34242]"],
+.chatterly-theme-dark [class*="text-[#D84747]"],
+.chatterly-theme-dark [class*="text-[#DC2626]"],
+.chatterly-theme-dark [class*="text-[#E05B5B]"],
+.chatterly-theme-dark [class*="text-[#E11D48]"],
+.chatterly-theme-dark [class*="text-[#EF2424]"],
+.chatterly-theme-dark [class*="text-[#EF3333]"],
+.chatterly-theme-dark [class*="text-[#EF4444]"],
+.chatterly-theme-dark [class*="text-[#F04444]"],
+.chatterly-theme-dark [class*="text-[#F2383F]"],
+.chatterly-theme-dark [class*="text-[#F40000]"],
+.chatterly-theme-dark [class*="text-[#F43F5E]"],
+.chatterly-theme-dark [class*="text-[#FF0000]"],
+.chatterly-theme-dark [class*="text-[#FF3344]"],
+.chatterly-theme-dark [class*="text-[#FF3B30]"],
+.chatterly-theme-dark [class*="text-[#FF3B45]"],
+.chatterly-theme-dark [class*="text-[#FF4D4F]"] {
+  color: #FCA5A5 !important;
+}
+.chatterly-theme-dark [class*="text-[#92400E]"],
+.chatterly-theme-dark [class*="text-[#9A3D0A]"],
+.chatterly-theme-dark [class*="text-[#A64F19]"],
+.chatterly-theme-dark [class*="text-[#B45309]"],
+.chatterly-theme-dark [class*="text-[#B7791F]"],
+.chatterly-theme-dark [class*="text-[#C2410C]"],
+.chatterly-theme-dark [class*="text-[#C76520]"],
+.chatterly-theme-dark [class*="text-[#C88B00]"],
+.chatterly-theme-dark [class*="text-[#D8780C]"],
+.chatterly-theme-dark [class*="text-[#D97706]"],
+.chatterly-theme-dark [class*="text-[#F97316]"] {
+  color: #FCD34D !important;
+}
+
+/* Icons drawn with a hard-coded stroke/fill attribute rather than currentColor.
+ * No class-based override can reach them, so they stayed near-black on the dark
+ * chrome - the "icons are hard to see" half of the same report. Values are
+ * matched case-insensitively (` i`) so lowercase hex in the markup is covered. */
+.chatterly-theme-dark [stroke="#065F46" i] {
+  stroke: #6EE7B7 !important;
+}
+.chatterly-theme-dark [stroke="#0B1220" i],
+.chatterly-theme-dark [stroke="#6D5EF6" i] {
+  stroke: #93C5FD !important;
+}
+.chatterly-theme-dark [stroke="#5121BF" i],
+.chatterly-theme-dark [stroke="#6D28D9" i],
+.chatterly-theme-dark [stroke="#7C3AED" i],
+.chatterly-theme-dark [stroke="#8B5CF6" i] {
+  stroke: #C4B5FD !important;
+}
+.chatterly-theme-dark [stroke="#1A1A1A" i],
+.chatterly-theme-dark [stroke="#1E293B" i],
+.chatterly-theme-dark [stroke="#334155" i],
+.chatterly-theme-dark [stroke="#475569" i],
+.chatterly-theme-dark [stroke="#52657F" i],
+.chatterly-theme-dark [stroke="#64748B" i] {
+  stroke: #C7D3E5 !important;
+}
+.chatterly-theme-dark [stroke="#DC2626" i] {
+  stroke: #FCA5A5 !important;
+}
+
+/* icon fills */
+.chatterly-theme-dark [fill="#1A1A1A" i],
+.chatterly-theme-dark [fill="#1E293B" i],
+.chatterly-theme-dark [fill="#475569" i],
+.chatterly-theme-dark [fill="#536A86" i] {
+  fill: #C7D3E5 !important;
+}
+
+/* The same pass for the named palette classes. A handful of screens use
+ * bg-red-50 / text-black / text-blue-700 style utilities instead of an explicit
+ * hex, and the hex lists above cannot see them. */
+.chatterly-theme-dark .bg-gray-100,
+.chatterly-theme-dark .bg-gray-200,
+.chatterly-theme-dark .bg-slate-50,
+.chatterly-theme-dark .bg-slate-100 {
+  background-color: #141C2C !important;
+}
+
+.chatterly-theme-dark .bg-red-50,
+.chatterly-theme-dark .bg-red-100,
+.chatterly-theme-dark .bg-rose-50,
+.chatterly-theme-dark .bg-rose-100 {
+  background-color: #3A1F27 !important;
+}
+
+.chatterly-theme-dark .bg-amber-50,
+.chatterly-theme-dark .bg-amber-100,
+.chatterly-theme-dark .bg-orange-50,
+.chatterly-theme-dark .bg-yellow-50 {
+  background-color: #3A2B15 !important;
+}
+
+.chatterly-theme-dark .bg-green-50,
+.chatterly-theme-dark .bg-green-100,
+.chatterly-theme-dark .bg-emerald-50,
+.chatterly-theme-dark .bg-emerald-100 {
+  background-color: #123329 !important;
+}
+
+.chatterly-theme-dark .bg-blue-50,
+.chatterly-theme-dark .bg-blue-100,
+.chatterly-theme-dark .bg-sky-50,
+.chatterly-theme-dark .bg-indigo-50 {
+  background-color: #16243C !important;
+}
+
+.chatterly-theme-dark .bg-purple-50,
+.chatterly-theme-dark .bg-purple-100,
+.chatterly-theme-dark .bg-violet-50 {
+  background-color: #2A2350 !important;
+}
+
+.chatterly-theme-dark .text-black,
+.chatterly-theme-dark .text-slate-900 {
+  color: #E8EDF7 !important;
+}
+
+/* text-gray-300 / #CBD5E1 are light greys that the readability pass at the top
+ * of this file pushes DOWN to #64748B for light surfaces. Undo that here rather
+ * than let a caption drop to 3.6:1 on the dark chrome. */
+.chatterly-theme-dark [class*="text-[#CBD5E1]"],
+.chatterly-theme-dark [class*="text-[#D1D5DB]"],
+.chatterly-theme-dark .text-gray-300,
+.chatterly-theme-dark .text-slate-300 {
+  color: #A6B6CE !important;
+}
+
+.chatterly-theme-dark .text-red-600,
+.chatterly-theme-dark .text-red-700,
+.chatterly-theme-dark .text-red-800,
+.chatterly-theme-dark .text-red-900,
+.chatterly-theme-dark .text-rose-600,
+.chatterly-theme-dark .text-rose-700 {
+  color: #FCA5A5 !important;
+}
+
+.chatterly-theme-dark .text-amber-700,
+.chatterly-theme-dark .text-amber-800,
+.chatterly-theme-dark .text-orange-700 {
+  color: #FCD34D !important;
+}
+
+.chatterly-theme-dark .text-green-600,
+.chatterly-theme-dark .text-green-700,
+.chatterly-theme-dark .text-green-900,
+.chatterly-theme-dark .text-emerald-600,
+.chatterly-theme-dark .text-emerald-700 {
+  color: #6EE7B7 !important;
+}
+
+.chatterly-theme-dark .text-blue-600,
+.chatterly-theme-dark .text-blue-700,
+.chatterly-theme-dark .text-blue-900,
+.chatterly-theme-dark .text-indigo-700,
+.chatterly-theme-dark .text-indigo-900 {
+  color: #93C5FD !important;
+}
+
+.chatterly-theme-dark .text-purple-600,
+.chatterly-theme-dark .text-purple-700,
+.chatterly-theme-dark .text-violet-600,
+.chatterly-theme-dark .text-violet-700 {
+  color: #C4B5FD !important;
+}
+
+.chatterly-theme-dark input,
+.chatterly-theme-dark textarea,
+.chatterly-theme-dark select {
+  color: #edf2fa;
+}
+
+.chatterly-theme-dark input::placeholder,
+.chatterly-theme-dark textarea::placeholder {
+  color: #9cacc5 !important;
+}
+
+.chatterly-theme-dark .chatterly-scrollbar {
+  scrollbar-color: #41516B transparent;
+}
+
+.chatterly-theme-dark .chatterly-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #41516B;
+}
+
+.chatterly-theme-dark .chatterly-app-shell,
+.chatterly-theme-dark .chatterly-main-header,
+.chatterly-theme-dark .chatterly-settings-workspace {
+  background-color: #111827 !important;
+  color: #e8edf7;
+}
+
+.chatterly-theme-dark .chatterly-main-header {
+  border-color: #28344C !important;
+}
+
+.chatterly-theme-dark .chatterly-main-search {
+  color: #CBD5E1 !important;
+}
+
+.chatterly-theme-dark .chatterly-main-search input {
+  color: #F8FAFC !important;
+}
+
+.chatterly-theme-dark .chatterly-main-search input::placeholder {
+  color: #CBD5E1 !important;
+  opacity: 1;
+}
+
+.chatterly-theme-dark .chatterly-app-logo {
+  filter: brightness(0) invert(1);
+  opacity: 0.94;
+}
+
+.chatterly-theme-dark .chatterly-left-nav-rail {
+  background-color: #0B1220 !important;
+  border-color: #28344C !important;
+}
+
+.chatterly-theme-dark .chatterly-left-nav-button {
+  color: #cbd5e1 !important;
+}
+
+.chatterly-theme-dark .chatterly-left-nav-button:hover {
+  background-color: #212C40 !important;
+  color: #f8fafc !important;
+}
+
+.chatterly-theme-dark .chatterly-left-nav-button[class*="text-[#8B5CF6]"],
+.chatterly-theme-dark .chatterly-left-nav-button[aria-current='page'] {
+  background-color: #2A2350 !important;
+  color: #c4b5fd !important;
+}
+
+/* The active nav icon's highlight is an inner square (bg-[#EEE9FF]); the generic
+   bg overlay was flattening it to a panel colour, hiding the selection. Restore a
+   clearly-visible purple wash so the selected rail button reads like a pill. */
+.chatterly-theme-dark .chatterly-left-nav-button [class*="bg-[#EEE9FF]"] {
+  background-color: rgba(139, 92, 246, 0.26) !important;
+  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.45) !important;
+}
+
+/* Chat message composer. Its container/border/shadow come from inline styles that
+   the class overlay can't reach, so it stays bright in dark mode — recolour it to
+   a proper dark surface here and lift the (hard-coded) icon + text colours. */
+.chatterly-theme-dark .chatterly-composer-bar {
+  background: #141c2c !important;
+  border-color: #28344c !important;
+  box-shadow: inset 0 0 0 1px rgba(40, 52, 76, 0.55), 0 8px 22px rgba(0, 0, 0, 0.34) !important;
+}
+
+.chatterly-theme-dark .chatterly-composer-bar textarea {
+  color: #e7edf7 !important;
+}
+
+.chatterly-theme-dark .chatterly-composer-bar span {
+  color: #c7d2e1 !important;
+}
+
+.chatterly-theme-dark .chatterly-composer-bar button:not([class*="text-white"]) svg {
+  stroke: #a6b6ce !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-menu,
+.chatterly-theme-dark .chatterly-settings-detail,
+.chatterly-theme-dark .chatterly-settings-workspace form,
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-white"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#FA"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#FB"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#FC"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#F8"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#F5"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#F1"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-gray-50"] {
+  background-color: #141C2C !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace section,
+.chatterly-theme-dark .chatterly-settings-workspace [role='dialog'] > div {
+  background-color: #1A2333 !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#EFE9FF]"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#F3E8FF]"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#F5F3FF]"] {
+  background-color: #2A2350 !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace [class*="border-[#D"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="border-[#E"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="border-gray-"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="divide-[#D"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="divide-[#E"] {
+  border-color: #28344C !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace input:not([type='checkbox']):not([type='radio']),
+.chatterly-theme-dark .chatterly-settings-workspace textarea,
+.chatterly-theme-dark .chatterly-settings-workspace select {
+  background-color: #111827 !important;
+  border-color: #2E3A54 !important;
+  color: #f8fafc !important;
+  color-scheme: dark;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace input::placeholder,
+.chatterly-theme-dark .chatterly-settings-workspace textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#0"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#111"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#172"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#182"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#1E"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#1F"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#243"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#334"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#374"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#475"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-gray-7"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-gray-8"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-gray-9"] {
+  color: #f8fafc !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#536"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#647"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#8A"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#94"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-gray-4"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-gray-5"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-gray-6"] {
+  color: #A6B6CE !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#6D28D9]"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#7C3AED]"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#8B5CF6]"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#9b66ff]"] {
+  color: #c4b5fd !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-[#EF"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-red"] {
+  color: #fca5a5 !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-green"],
+.chatterly-theme-dark .chatterly-settings-workspace [class*="text-emerald"] {
+  color: #86efac !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace button[class*="hover:bg-[#F8FAFC]"]:hover,
+.chatterly-theme-dark .chatterly-settings-workspace button[class*="hover:bg-[#F1F5F9]"]:hover,
+.chatterly-theme-dark .chatterly-settings-workspace label[class*="hover:bg-[#F8FAFC]"]:hover {
+  background-color: #212C40 !important;
+}
+
+/* Keep the destructive settings action readable when its light-mode hover
+   utility is used inside the dark sidebar. */
+.chatterly-theme-dark .chatterly-settings-logout {
+  color: #FCA5A5 !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-logout .chatterly-settings-logout-description {
+  color: #E2E8F0 !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-logout:hover {
+  background-color: #3A1F27 !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-logout:hover .chatterly-settings-logout-title {
+  color: #FECACA !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-logout:hover .chatterly-settings-logout-description {
+  color: #F8FAFC !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#7C3AED]"]:not(:disabled),
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#8B5CF6]"]:not(:disabled),
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#A855F7]"]:not(:disabled) {
+  background-color: #8b5cf6 !important;
+  color: #ffffff !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#EF4444]"]:not(:disabled),
+.chatterly-theme-dark .chatterly-settings-workspace [class*="bg-[#DC2626]"]:not(:disabled) {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace button:disabled {
+  color: #94a3b8 !important;
+}
+
+/* Notification category and configuration SVGs use currentColor. Keep their
+   foregrounds explicit so broad dark-theme utility remapping cannot leave the
+   strokes the same colour as their surfaces. */
+.chatterly-theme-dark .chatterly-settings-workspace .chatterly-notification-category-icon {
+  background-color: #141C2C !important;
+  color: #E8EDF7 !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace .chatterly-notification-config-icon {
+  color: #A6B6CE !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace .chatterly-notification-category-icon svg,
+.chatterly-theme-dark .chatterly-settings-workspace .chatterly-notification-config-icon svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace button:hover .chatterly-notification-config-icon {
+  color: #C4B5FD !important;
+}
+
+/* Keep Notification switch states distinct on dark surfaces. */
+.chatterly-theme-dark .chatterly-notification-toggle[data-checked='false'] rect:first-child { fill: #334155; }
+.chatterly-theme-dark .chatterly-notification-toggle[data-checked='true'] rect:first-child { fill: #7C3AED; }
+.chatterly-theme-dark .chatterly-notification-toggle[data-checked='false'] rect:nth-child(2) { stroke: #64748B; stroke-width: 1; }
+.chatterly-theme-dark .chatterly-notification-toggle[data-checked='true'] rect:nth-child(2) { stroke: #C4B5FD; stroke-width: 1; }
+.chatterly-theme-dark .chatterly-notification-toggle[data-checked='false'] rect:nth-child(3) { fill: #E2E8F0; }
+.chatterly-theme-dark .chatterly-notification-toggle[data-checked='true'] rect:nth-child(3) { fill: #FFFFFF; }
+
+/* The On/Off read-out beside a settings switch. Its light-mode greys sit outside
+   every range the dark overlay above rewrites, so the pill kept its near-white
+   fill while the overlay lightened the label on top of it — leaving the state
+   text invisible. Both themes are stated here so neither can drift. */
+.chatterly-toggle-state-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  padding: 0.5rem 0.75rem;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  background-color: #EEF2F8;
+  color: #475569;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.28);
+}
+
+.chatterly-toggle-state-pill[data-state='on'] {
+  background-color: #F0EAFE;
+  color: #5B21B6;
+  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.32);
+}
+
+.chatterly-theme-dark .chatterly-toggle-state-pill,
+.chatterly-theme-dark .chatterly-settings-workspace .chatterly-toggle-state-pill {
+  background-color: #1E293B !important;
+  color: #F8FAFC !important;
+  box-shadow: inset 0 0 0 1px #64748B !important;
+}
+
+.chatterly-theme-dark .chatterly-toggle-state-pill[data-state='on'],
+.chatterly-theme-dark .chatterly-settings-workspace .chatterly-toggle-state-pill[data-state='on'] {
+  background-color: #5B21B6 !important;
+  color: #FFFFFF !important;
+  box-shadow: inset 0 0 0 1px #A78BFA !important;
+}
+
+/* The red "Delete Message" actions (BUG_USR_506). Their hover/disabled variants
+   (hover:bg-[#EA1111], hover:bg-[#E21212], disabled:bg-[#D8E0EB],
+   disabled:text-[#7C8DA5]) contain the class substrings the dark overlay above
+   matches, so the overlay repainted the whole button in the panel colour with
+   grey text. Both states are stated here so the action stays red in dark mode. */
+.chatterly-theme-dark .chatterly-danger-action:not(:disabled),
+.chatterly-theme-dark .chatterly-danger-action:disabled:not([class*="disabled:bg-"]) {
+  background-color: #FF1717 !important;
+  color: #FFFFFF !important;
+}
+
+.chatterly-theme-dark .chatterly-danger-action:not(:disabled):hover {
+  background-color: #E21212 !important;
+}
+
+/* A button whose light design greys out while disabled stays visibly muted. */
+.chatterly-theme-dark .chatterly-danger-action[class*="disabled:bg-"]:disabled {
+  background-color: #28344C !important;
+  color: #A6B6CE !important;
+}
+
+/* "Not Now" on the contacts Allow Access dialog (BUG_USR_511). Its
+   hover:bg-gray-100 fill is outside the dark overlay, so on hover the overlay's
+   near-white label sat on a near-white fill and disappeared. */
+.chatterly-theme-dark .chatterly-contacts-permission-dismiss:hover,
+.chatterly-theme-dark .chatterly-contacts-permission-dismiss:focus-visible {
+  background-color: #212C40 !important;
+  color: #F8FAFC !important;
+}
+
+.chatterly-theme-dark .chatterly-settings-workspace button[class*="disabled:bg-[#D7DEE8]"]:disabled,
+.chatterly-theme-dark .chatterly-settings-workspace button[class*="disabled:bg-[#D8CCFF]"]:disabled {
+  background-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+.chatterly-theme-dark .chatterly-privacy-security {
+  background-color: #141C2C !important;
+  color: #f8fafc;
+}
+
+.chatterly-theme-dark .chatterly-privacy-security .chatterly-scrollbar {
+  background-color: #141C2C !important;
+}
+
+.chatterly-theme-dark .chatterly-privacy-security h2,
+.chatterly-theme-dark .chatterly-privacy-security .chatterly-privacy-row [class*="text-[#111"],
+.chatterly-theme-dark .chatterly-privacy-security .chatterly-privacy-row [class*="text-[#182"],
+.chatterly-theme-dark .chatterly-privacy-security .chatterly-privacy-row [class*="text-[#1E"],
+.chatterly-theme-dark .chatterly-privacy-security .chatterly-privacy-row [class*="text-[#0"] {
+  color: #f8fafc !important;
+}
+
+.chatterly-theme-dark .chatterly-privacy-security p,
+.chatterly-theme-dark .chatterly-privacy-security .chatterly-privacy-row [class*="text-[#536"],
+.chatterly-theme-dark .chatterly-privacy-security .chatterly-privacy-row [class*="text-[#647"],
+.chatterly-theme-dark .chatterly-privacy-security .chatterly-privacy-row [class*="text-[#94"] {
+  color: #cbd5e1 !important;
+}
+
+.chatterly-theme-dark .chatterly-privacy-row {
+  border-color: #28344C !important;
+}
+
+.chatterly-theme-dark button.chatterly-privacy-row:hover,
+.chatterly-theme-dark .chatterly-privacy-row:hover {
+  background-color: #161F30 !important;
+}
+
+.chatterly-theme-dark .chatterly-privacy-icon-frame {
+  background-color: #212C40 !important;
+  color: #e8edf7 !important;
+  box-shadow: inset 0 0 0 1px #28344C;
+}
+
+.chatterly-theme-dark .chatterly-privacy-open-icon,
+.chatterly-theme-dark .chatterly-privacy-open-icon svg {
+  color: #a8b6cc !important;
+  stroke: currentColor;
+}
+
+.chatterly-theme-dark .chatterly-privacy-row:hover .chatterly-privacy-open-icon,
+.chatterly-theme-dark .chatterly-privacy-open-icon:hover {
+  color: #ddd6fe !important;
+}
+
+.chatterly-theme-dark .chatterly-privacy-status-pill {
+  background-color: #212C40 !important;
+  color: #e8edf7 !important;
+}
+
+.chatterly-theme-dark .chatterly-privacy-status-pill[data-tone='success'] {
+  background-color: #12382b !important;
+  color: #86efac !important;
+}
+
+.chatterly-theme-dark .chatterly-privacy-status-pill[data-tone='blue'] {
+  background-color: #172f54 !important;
+  color: #93c5fd !important;
+}
+
+.chatterly-theme-dark .chatterly-privacy-report-action {
+  background-color: #2A2350 !important;
+  color: #ddd6fe !important;
+}
+
+.chatterly-theme-dark .chatterly-privacy-report-action svg {
+  color: inherit !important;
+  stroke: currentColor;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar,
+.chatterly-theme-dark .chatterly-calls-workspace {
+  background-color: #141C2C !important;
+  color: #f8fafc;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="bg-white"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="bg-white"] {
+  background-color: #141C2C !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="bg-[#F8"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="bg-[#FB"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="bg-[#EE"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="bg-gray-50"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="bg-[#F8"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="bg-[#FB"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="bg-[#EE"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="bg-gray-50"] {
+  background-color: #161F30 !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="bg-[#F3E8FF]"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="bg-[#F3E8FF]"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="bg-[#EDE9FE]"] {
+  background-color: #2A2350 !important;
+  color: #c4b5fd !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-workspace [class*="bg-[#FEF2F2]"] {
+  background-color: #3b1f2a !important;
+  color: #fca5a5 !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="border-[#D"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="border-[#E"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="border-gray-"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="border-[#D"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="border-[#E"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="border-gray-"] {
+  border-color: #28344C !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-[#0"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-[#111"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-[#1E"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-[#334"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-gray-8"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-[#0"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-[#111"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-[#1E"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-[#334"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-gray-8"] {
+  color: #f8fafc !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-[#475"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-[#647"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-[#94"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-gray-4"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-gray-5"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-gray-6"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-[#475"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-[#647"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-[#94"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-gray-4"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-gray-5"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-gray-6"] {
+  color: #cbd5e1 !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-[#8B5CF6]"],
+.chatterly-theme-dark .chatterly-calls-sidebar [class*="text-[#A855F7]"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-[#8B5CF6]"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-[#A855F7]"] {
+  color: #c4b5fd !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-[#DC2626]"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-[#EF4444]"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-red"] {
+  color: #fca5a5 !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-green"],
+.chatterly-theme-dark .chatterly-calls-workspace [class*="text-emerald"] {
+  color: #86efac !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar input,
+.chatterly-theme-dark .chatterly-calls-workspace input {
+  background-color: #111827 !important;
+  border-color: #2E3A54 !important;
+  color: #f8fafc !important;
+  color-scheme: dark;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar input::placeholder,
+.chatterly-theme-dark .chatterly-calls-workspace input::placeholder {
+  color: #a8b6cc !important;
+  opacity: 1;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar button[class*="hover:bg-[#F8"]:hover,
+.chatterly-theme-dark .chatterly-calls-sidebar button[class*="hover:bg-gray-"]:hover,
+.chatterly-theme-dark .chatterly-calls-workspace button[class*="hover:bg-[#F8"]:hover,
+.chatterly-theme-dark .chatterly-calls-workspace button[class*="hover:bg-gray-"]:hover {
+  background-color: #212C40 !important;
+  color: #f8fafc !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar button[class*="hover:bg-[#F3E8FF]"]:hover,
+.chatterly-theme-dark .chatterly-calls-workspace button[class*="hover:bg-[#F3E8FF]"]:hover,
+.chatterly-theme-dark .chatterly-calls-workspace button[class*="focus:bg-[#F3E8FF]"]:focus,
+.chatterly-theme-dark .chatterly-calls-workspace button[class*="active:bg-[#EDE9FE]"]:active {
+  background-color: #2A2350 !important;
+  color: #ddd6fe !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-sidebar button:disabled {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #cbd5e1 !important;
+  opacity: 1 !important;
+}
+
+.chatterly-theme-dark .chatterly-calls-workspace button:disabled {
+  color: #94a3b8 !important;
+  opacity: 0.72 !important;
+}
+
+/* Video-call controls need explicit foregrounds because their icons inherit
+ * currentColor. Keeping these overrides scoped avoids changing other call and
+ * chat surfaces while guaranteeing contrast on the dark call chrome. */
+.chatterly-theme-dark .chatterly-video-call-status {
+  background-color: #1B2639 !important;
+  border-color: #3A4964 !important;
+  color: #F8FAFC !important;
+}
+
+.chatterly-theme-dark .chatterly-video-call-duration {
+  color: #FFFFFF !important;
+}
+
+.chatterly-theme-dark .chatterly-incoming-call-identity {
+  color: #F8FAFC !important;
+}
+
+.chatterly-theme-dark .chatterly-video-call-controls {
+  background-color: #141C2C !important;
+  border-color: #3A4964 !important;
+}
+
+.chatterly-theme-dark .chatterly-video-call-control,
+.chatterly-theme-dark .chatterly-video-call-control-icon {
+  color: #F8FAFC !important;
+}
+
+.chatterly-theme-dark .chatterly-video-call-control-label {
+  color: #E2E8F0 !important;
+}
+
+.chatterly-theme-dark .chatterly-video-call-control[aria-pressed='true'] .chatterly-video-call-control-icon,
+.chatterly-theme-dark .chatterly-video-call-control[aria-pressed='true'] .chatterly-video-call-control-label {
+  color: #C4B5FD !important;
+}
+
+.chatterly-theme-dark .chatterly-monitoring-workspace {
+  background-color: #111827 !important;
+  color: #f8fafc;
+}
+
+.chatterly-theme-dark .chatterly-monitoring-workspace section,
+.chatterly-theme-dark .chatterly-monitoring-workspace [class*="bg-white"] {
+  background-color: #141C2C !important;
+}
+
+.chatterly-theme-dark .chatterly-monitoring-workspace [class*="bg-[#F8"],
+.chatterly-theme-dark .chatterly-monitoring-workspace [class*="bg-[#FB"],
+.chatterly-theme-dark .chatterly-monitoring-workspace [class*="bg-[#EE"] {
+  background-color: #161F30 !important;
+}
+
+.chatterly-theme-dark .chatterly-monitoring-workspace [class*="bg-[#F3E8FF]"] {
+  background-color: #2A2350 !important;
+  color: #c4b5fd !important;
+}
+
+.chatterly-theme-dark .chatterly-monitoring-workspace [class*="border-[#D"],
+.chatterly-theme-dark .chatterly-monitoring-workspace [class*="border-[#E"],
+.chatterly-theme-dark .chatterly-monitoring-workspace [class*="border-[#FEC"] {
+  border-color: #28344C !important;
+}
+
+.chatterly-theme-dark .chatterly-monitoring-workspace [class*="text-[#111"],
+.chatterly-theme-dark .chatterly-monitoring-workspace [class*="text-[#334"] {
+  color: #f8fafc !important;
+}
+
+.chatterly-theme-dark .chatterly-monitoring-workspace [class*="text-[#647"] {
+  color: #cbd5e1 !important;
+}
+
+.chatterly-theme-dark .chatterly-monitoring-workspace select {
+  background-color: #141C2C !important;
+  border-color: #2E3A54 !important;
+  color: #f8fafc !important;
+  color-scheme: dark;
+}
+
+@layer utilities {
+  .chatterly-emoji-text {
+    font-family:
+      Inter,
+      "Segoe UI",
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif,
+      "Apple Color Emoji",
+      "Segoe UI Emoji",
+      "Segoe UI Symbol",
+      "Noto Color Emoji";
+    unicode-bidi: plaintext;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .chatterly-emoji-glyph {
+    font-family:
+      "Apple Color Emoji",
+      "Segoe UI Emoji",
+      "Segoe UI Symbol",
+      "Noto Color Emoji",
+      system-ui,
+      sans-serif;
+    font-variant-emoji: emoji;
+  }
+
+  .chatterly-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-gutter: stable;
+  }
+
+  .chatterly-scrollbar::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .chatterly-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .chatterly-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background-clip: content-box;
+  }
+
+  .chatterly-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: #94a3b8;
+  }
+
+  .chatterly-emoji-picker .chatterly-scrollbar {
+    /* Keep the picker independently scrollable while an input has focus.
+       This is especially important with a mobile keyboard open, where the
+       available picker height can be quite small. */
+    -webkit-overflow-scrolling: touch;
+    /* Native scrolling responds immediately to mouse wheels and touch drags;
+       smooth programmatic scrolling can make a dense picker feel delayed. */
+    scroll-behavior: auto;
+    touch-action: pan-y;
+    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  .chatterly-emoji-picker .chatterly-scrollbar::-webkit-scrollbar {
+    display: block;
+    height: 10px;
+    width: 10px;
+  }
+
+  .chatterly-emoji-picker .chatterly-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .chatterly-emoji-picker .chatterly-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background-clip: content-box;
+  }
+
+  .chatterly-emoji-picker .chatterly-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: #94a3b8;
+  }
+
+  .chatterly-emoji-picker--profile {
+    overflow-x: hidden;
+  }
+
+  .chatterly-emoji-picker--profile .chatterly-scrollbar {
+    overflow-x: hidden;
+    scrollbar-width: none;
+    scrollbar-gutter: auto;
+  }
+
+  .chatterly-emoji-picker--profile .chatterly-scrollbar::-webkit-scrollbar {
+    display: none;
+    height: 0;
+    width: 0;
+  }
+}
+
+/* Shared auth/profile hero panel (login, OTP, create profile, profile, edit
+   profile) — light grey by default; the purple gradient + light text apply only
+   in dark mode (.chatterly-theme-dark on <html>). Elements carry these classes
+   instead of hard-coded colour utilities so both themes stay predictable and the
+   generic dark utility overlay above can't flatten them. */
+.login-hero {
+  background: linear-gradient(135deg, #F1F3F6 0%, #E8EBF0 55%, #DEE2E9 100%);
+}
+.login-hero__decor { display: none; }
+.login-hero__eyebrow { color: #4C3FB3; }
+.login-hero__title { color: #1F2937; }
+.login-hero__text { color: #4B5563; }
+.login-hero__badge {
+  color: #4C3FB3;
+  background: rgba(76, 110, 245, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(76, 110, 245, 0.20);
+}
+.login-hero__icon {
+  color: #4C3FB3;
+  background: rgba(76, 110, 245, 0.12);
+}
+.login-hero__card {
+  background: rgba(255, 255, 255, 0.70);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+}
+.login-hero__glow { background: #FFFFFF; opacity: 0.5; }
+.login-hero__img { filter: drop-shadow(0 14px 30px rgba(15, 23, 42, 0.14)); }
+
+.chatterly-theme-dark .login-hero {
+  background: radial-gradient(120% 120% at 15% 0%, #2A2350 0%, #171633 45%, #0C1022 100%);
+}
+.chatterly-theme-dark .login-hero__decor { display: block; }
+.chatterly-theme-dark .login-hero__logo { filter: brightness(0) invert(1); }
+.chatterly-theme-dark .login-hero__eyebrow { color: #C4B5FD; }
+.chatterly-theme-dark .login-hero__title { color: #FFFFFF; }
+.chatterly-theme-dark .login-hero__text { color: #B7C0D8; }
+.chatterly-theme-dark .login-hero__badge {
+  color: #C4B5FD;
+  background: rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+}
+.chatterly-theme-dark .login-hero__icon {
+  color: #C4B5FD;
+  background: rgba(139, 92, 246, 0.22);
+}
+.chatterly-theme-dark .login-hero__card {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+}
+.chatterly-theme-dark .login-hero__glow { background: #8B5CF6; opacity: 0.35; }
+.chatterly-theme-dark .login-hero__img { filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.55)); }
+
+/* The auth/profile cards sit on the same off-white as the page, which the dark
+   overlay collapses into a single flat surface. Push the page darker so the card
+   still reads as a card, and patch the few hard-coded greys in those forms that
+   the overlay's text rules don't reach. */
+.chatterly-theme-dark .chatterly-auth-shell {
+  background-color: #0A0F1C !important;
+}
+
+.chatterly-theme-dark .chatterly-auth-shell .text-\[\#71767A\],
+.chatterly-theme-dark .chatterly-auth-shell .text-\[\#374151\] {
+  color: #9fb0c9 !important;
+}
+
+/* Near-white card fills and the ink-black headings on the profile screens fall
+   outside the ranges the overlay above matches, which left dark text on white
+   cards (and vice versa) in dark mode. */
+.chatterly-theme-dark .chatterly-auth-shell [class*="bg-[#FB"],
+.chatterly-theme-dark .chatterly-auth-shell [class*="bg-[#FC"],
+.chatterly-theme-dark .chatterly-auth-shell [class*="bg-[#FD"],
+.chatterly-theme-dark .chatterly-auth-shell [class*="bg-gray-100"],
+.chatterly-theme-dark .chatterly-auth-shell [class*="bg-gray-200"] {
+  background-color: #1A2333 !important;
+}
+
+.chatterly-theme-dark .chatterly-auth-shell .text-black,
+.chatterly-theme-dark .chatterly-auth-shell [class*="text-[#1F"] {
+  color: #e8edf7 !important;
+}
+
+.chatterly-theme-dark .chatterly-auth-shell button:disabled {
+  background-color: #1E293B !important;
+  color: #8296b3 !important;
+}
+
+/* The OTP digit boxes carry no background utility, so they fall back to the UA's
+   dark field grey. Give every auth field the same recessed surface instead. */
+.chatterly-theme-dark .chatterly-auth-shell input,
+.chatterly-theme-dark .chatterly-auth-shell textarea {
+  background-color: #0F1726 !important;
+}
+
+.chatterly-theme-dark .chatterly-message-options-button {
+  background-color: #1A2333 !important;
+  border-color: #41516B !important;
+  color: #E2E8F0 !important;
+}
+
+.chatterly-theme-dark .chatterly-message-options-button:hover {
+  color: #FFFFFF !important;
+}
+
+.chatterly-theme-dark .chatterly-message-options-button[aria-expanded='true'] {
+  color: #C4B5FD !important;
+}
+
+.chatterly-theme-dark .chatterly-message-actions-menu [data-message-action-item] {
+  color: #E2E8F0 !important;
+}
+
+.chatterly-theme-dark .chatterly-message-actions-menu [data-message-action-item='delete'] {
+  color: #FCA5A5 !important;
+}
+
+.chatterly-theme-dark .chatterly-message-actions-menu [data-message-action-item] > span:first-child svg [stroke] {
+  stroke: currentColor !important;
+}
+
+/* Keep media-quality state and contact-modal dismissal affordances visible
+   after the broad dark-theme utility remapping above. */
+.chatterly-theme-dark .chatterly-high-quality-toggle[data-state='off'] {
+  background-color: #334155 !important;
+  box-shadow: inset 0 0 0 1px #94A3B8;
+}
+
+.chatterly-theme-dark .chatterly-high-quality-toggle[data-state='on'] {
+  background-color: #2563EB !important;
+  box-shadow: inset 0 0 0 1px #93C5FD;
+}
+
+.chatterly-theme-dark .chatterly-high-quality-toggle .chatterly-high-quality-toggle-thumb {
+  background-color: #FFFFFF !important;
+  box-shadow: 0 1px 3px rgba(2, 6, 23, 0.45);
+}
+
+.chatterly-theme-dark .chatterly-high-quality-toggle:focus-visible {
+  outline: 2px solid #BFDBFE;
+  outline-offset: 2px;
+}
+
+.chatterly-theme-dark .chatterly-contact-modal-close:hover:not(:disabled),
+.chatterly-theme-dark .chatterly-contact-modal-close:focus-visible:not(:disabled) {
+  background-color: #26344D !important;
+  color: #FFFFFF !important;
+}
+
+.chatterly-add-contact-close:hover:not(:disabled),
+.chatterly-add-contact-close:focus-visible:not(:disabled),
+.chatterly-add-contact-cancel:hover:not(:disabled),
+.chatterly-add-contact-cancel:focus-visible:not(:disabled) {
+  background-color: #F5F3FF !important;
+  border-color: #C4B5FD !important;
+  color: #7C3AED !important;
+}
+
+.chatterly-theme-dark .chatterly-add-contact-close:hover:not(:disabled),
+.chatterly-theme-dark .chatterly-add-contact-close:focus-visible:not(:disabled),
+.chatterly-theme-dark .chatterly-add-contact-cancel:hover:not(:disabled),
+.chatterly-theme-dark .chatterly-add-contact-cancel:focus-visible:not(:disabled) {
+  background-color: #2A2350 !important;
+  border-color: #8B5CF6 !important;
+  color: #DDD6FE !important;
+}
+
+/* Keep group names readable when the chat sidebar gets narrow (including at
+   browser zoom levels where the CSS viewport becomes narrower). */
+@media (max-width: 1279px) {
+  .chatterly-group-chat-list-heading {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .chatterly-group-chat-list-name {
+    flex: 1 1 100%;
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+  }
+
+  .chatterly-group-chat-list-name > span {
+    display: block;
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+  }
+}

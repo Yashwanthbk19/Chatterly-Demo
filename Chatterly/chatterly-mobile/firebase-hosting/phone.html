@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Chatterly phone verification</title>
+    <style>
+      html, body { height: 100%; margin: 0; font-family: system-ui, sans-serif; background: #fff; color: #0b1220; }
+      main { min-height: 100%; display: grid; place-items: center; padding: 24px; box-sizing: border-box; text-align: center; }
+      .spinner { width: 28px; height: 28px; margin: 0 auto 18px; border: 3px solid #e5e7eb; border-top-color: #8b4cf6; border-radius: 50%; animation: spin .8s linear infinite; }
+      p { max-width: 320px; color: #596579; font-size: 14px; line-height: 1.5; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
+  </head>
+  <body>
+    <main>
+      <div>
+        <div class="spinner" aria-hidden="true"></div>
+        <p id="status" role="status">Checking that this request is from a real person…</p>
+        <div id="recaptcha-container"></div>
+      </div>
+    </main>
+    <script src="/auth-common.js"></script>
+    <script>
+      (async function sendPhoneCode() {
+        const phone = request.get('phone') || '';
+        if (!/^\+[1-9]\d{6,14}$/.test(phone)) {
+          finish({error: 'auth/invalid-phone-number', message: 'Enter a valid international phone number.'});
+          return;
+        }
+        try {
+          firebase.auth().useDeviceLanguage();
+          const verifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            size: 'invisible',
+          });
+          const confirmation = await firebase.auth().signInWithPhoneNumber(phone, verifier);
+          finish({verification_id: confirmation.verificationId});
+        } catch (error) {
+          finish(errorValues(error));
+        }
+      }());
+    </script>
+  </body>
+</html>

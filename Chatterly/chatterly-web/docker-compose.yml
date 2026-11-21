@@ -1,0 +1,33 @@
+services:
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: chatterly-backend:${BUILD_NUMBER:-latest}
+    container_name: chatterly-backend
+    env_file:
+      - /home/ubuntu/chatterly/chatterly-web/backend/.env
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    networks:
+      - chatterly-network
+    
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: chatterly-frontend:${BUILD_NUMBER:-latest}
+    container_name: chatterly-frontend
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - chatterly-network
+
+networks:
+  chatterly-network:
+    driver: bridge
